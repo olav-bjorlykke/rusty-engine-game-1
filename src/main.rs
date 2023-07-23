@@ -1,12 +1,11 @@
 //Libraries
-use rusty_engine::prelude::*;
 use rand::prelude::*;
+use rusty_engine::prelude::*;
 
 //Constants
 const PLAYER_SPEED: f32 = 250.0;
 const ROAD_SPEED: f32 = 900.0;
 const ROAD_WIDTH: f32 = 300.0;
-
 
 struct GameState {
     high_score: i32,
@@ -30,41 +29,51 @@ fn main() {
 
     //Creating player and adjusting player attributes
     let mut player = game.add_sprite("Player_1", SpritePreset::RacingCarBlue);
-    player.translation = Vec2::new(-200.0,0.0);
+    player.translation = Vec2::new(-200.0, 0.0);
     player.layer = 10.0;
     player.collision = true;
 
     //Adding Roadlines to the game
     for i in 0..15 {
-        let mut roadline_top = game.add_sprite(format!("Roadline_top{}", i), SpritePreset::RacingBarrierWhite);
+        let mut roadline_top = game.add_sprite(
+            format!("Roadline_top{}", i),
+            SpritePreset::RacingBarrierWhite,
+        );
         roadline_top.translation = Vec2::new(-675.0 + 100.0 * (i as f32), ROAD_WIDTH);
         roadline_top.scale = 0.1;
 
-        let mut roadline_bottom = game.add_sprite(format!("Roadline_bottom{}", i), SpritePreset::RacingBarrierWhite);
-        roadline_bottom.translation = Vec2::new(-675.0 + 100.0 * (i as f32), - ROAD_WIDTH);
+        let mut roadline_bottom = game.add_sprite(
+            format!("Roadline_bottom{}", i),
+            SpritePreset::RacingBarrierWhite,
+        );
+        roadline_bottom.translation = Vec2::new(-675.0 + 100.0 * (i as f32), -ROAD_WIDTH);
         roadline_bottom.scale = 0.1;
     }
 
-    //Add obstacles to the game
-    let obstacle_presets:Vec<SpritePreset> = vec![SpritePreset::RacingBarrelBlue, SpritePreset::RacingBarrelRed,
-                                                  SpritePreset::RacingConeStraight];
-    for (i,preset) in obstacle_presets.into_iter().enumerate(){
-        let mut obstacle = game.add_sprite(format!("obstacle{}",i), preset);
+    //Adding obstacles to the game
+    let obstacle_presets: Vec<SpritePreset> = vec![
+        SpritePreset::RacingBarrelBlue,
+        SpritePreset::RacingBarrelRed,
+        SpritePreset::RacingConeStraight,
+    ];
+    for (i, preset) in obstacle_presets.into_iter().enumerate() {
+        let mut obstacle = game.add_sprite(format!("obstacle{}", i), preset);
         obstacle.layer = 5.0;
         obstacle.collision = true;
         obstacle.translation.x = thread_rng().gen_range(800.0..1600.0);
         obstacle.translation.y = thread_rng().gen_range(-ROAD_WIDTH..ROAD_WIDTH)
     }
 
+    //Adding Health score overview to the game
+    let mut health_message =
+        game.add_text("health_message", format!("Health: {}", game_state.health));
+    health_message.translation = Vec2::new(550.0, 320.0);
 
-
-
-    for i in 0..15 {
-
-    }
+    for i in 0..15 {}
 
     //Adding music to the game
-    game.audio_manager.play_music(MusicPreset::WhimsicalPopsicle, 0.5);
+    game.audio_manager
+        .play_music(MusicPreset::WhimsicalPopsicle, 0.5);
 
     // game setup goes here
 
@@ -73,13 +82,13 @@ fn main() {
 }
 
 fn game_logic(engine: &mut Engine, game_state: &mut GameState) {
-    let mut direction:f32 = 0.0;
+    let mut direction: f32 = 0.0;
 
     //Fetching Keyboard inputs
-    if engine.keyboard_state.pressed(KeyCode::Up){
+    if engine.keyboard_state.pressed(KeyCode::Up) {
         direction += 1.0;
     }
-    if engine.keyboard_state.pressed(KeyCode::Down){
+    if engine.keyboard_state.pressed(KeyCode::Down) {
         direction -= 1.0;
     }
 
@@ -88,18 +97,18 @@ fn game_logic(engine: &mut Engine, game_state: &mut GameState) {
 
     //Moving the player with input
     player1.translation.y += direction * PLAYER_SPEED * engine.delta_f32;
-    player1.rotation = 0.15* direction;
+    player1.rotation = 0.15 * direction;
 
     //Killing the player if it goes out of bounds
-    if player1.translation.y > ROAD_WIDTH || player1.translation.y < - ROAD_WIDTH {
+    if player1.translation.y > ROAD_WIDTH || player1.translation.y < -ROAD_WIDTH {
         game_state.health = 0;
     }
 
     //Moving roadlines and obstacles if right arrow is pressed to create illusion of movement to the right
-    if engine.keyboard_state.pressed(KeyCode::Right){
+    if engine.keyboard_state.pressed(KeyCode::Right) {
         //Iterating through all sprites
         for sprite in engine.sprites.values_mut() {
-            if sprite.label.starts_with("Roadline"){
+            if sprite.label.starts_with("Roadline") {
                 //Moving roadlines to the left
                 sprite.translation.x -= ROAD_SPEED * engine.delta_f32;
                 if sprite.translation.x < -675.0 {
@@ -107,7 +116,7 @@ fn game_logic(engine: &mut Engine, game_state: &mut GameState) {
                     sprite.translation.x += 1500.0
                 }
             }
-            if sprite.label.starts_with("obstacle"){
+            if sprite.label.starts_with("obstacle") {
                 //Moving obstacles to the left
                 sprite.translation.x -= ROAD_SPEED * engine.delta_f32;
                 //Regenerating sprite at random location if it has passed outside the screen
@@ -116,6 +125,17 @@ fn game_logic(engine: &mut Engine, game_state: &mut GameState) {
                     sprite.translation.y = thread_rng().gen_range(-ROAD_WIDTH..ROAD_WIDTH)
                 }
             }
+        }
+    }
+
+    //Handling health and health events
+    let health_message = engine.texts.get_mut("health_message").unwrap();
+    for event in engine.collision_events.drain(..) {
+        if !event.pair.either_contains("Player_1") || event.state.is_end() { continue; }
+        if game_state.health > 0 {
+            println!("collision happened");
+            game_state.health -= 1;
+            health_message.value = format!("Health {}", game_state.health);
         }
     }
 }
