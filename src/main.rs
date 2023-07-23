@@ -1,9 +1,10 @@
 //Libraries
 use rusty_engine::prelude::*;
+use rand::prelude::*;
 
 //Constants
 const PLAYER_SPEED: f32 = 250.0;
-const ROAD_SPEED: f32 = 400.0;
+const ROAD_SPEED: f32 = 900.0;
 const ROAD_WIDTH: f32 = 300.0;
 
 
@@ -44,6 +45,20 @@ fn main() {
         roadline_bottom.scale = 0.1;
     }
 
+    //Add obstacles to the game
+    let obstacle_presets:Vec<SpritePreset> = vec![SpritePreset::RacingBarrelBlue, SpritePreset::RacingBarrelRed,
+                                                  SpritePreset::RacingConeStraight];
+    for (i,preset) in obstacle_presets.into_iter().enumerate(){
+        let mut obstacle = game.add_sprite(format!("obstacle{}",i), preset);
+        obstacle.layer = 5.0;
+        obstacle.collision = true;
+        obstacle.translation.x = thread_rng().gen_range(800.0..1600.0);
+        obstacle.translation.y = thread_rng().gen_range(-ROAD_WIDTH..ROAD_WIDTH)
+    }
+
+
+
+
     for i in 0..15 {
 
     }
@@ -80,14 +95,25 @@ fn game_logic(engine: &mut Engine, game_state: &mut GameState) {
         game_state.health = 0;
     }
 
-    //Moving roadlines if right arrow is pressed to create illusion of movement to the right
+    //Moving roadlines and obstacles if right arrow is pressed to create illusion of movement to the right
     if engine.keyboard_state.pressed(KeyCode::Right){
+        //Iterating through all sprites
         for sprite in engine.sprites.values_mut() {
-            if sprite.label.starts_with("Roadline") {
+            if sprite.label.starts_with("Roadline"){
+                //Moving roadlines to the left
                 sprite.translation.x -= ROAD_SPEED * engine.delta_f32;
                 if sprite.translation.x < -675.0 {
                     //Moving Roadlines to the other side when they pass outside the screen
                     sprite.translation.x += 1500.0
+                }
+            }
+            if sprite.label.starts_with("obstacle"){
+                //Moving obstacles to the left
+                sprite.translation.x -= ROAD_SPEED * engine.delta_f32;
+                //Regenerating sprite at random location if it has passed outside the screen
+                if sprite.translation.x < -800.0 {
+                    sprite.translation.x = thread_rng().gen_range(800.0..1600.0);
+                    sprite.translation.y = thread_rng().gen_range(-ROAD_WIDTH..ROAD_WIDTH)
                 }
             }
         }

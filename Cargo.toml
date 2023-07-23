@@ -7,3 +7,9 @@ edition = "2021"
 
 [dependencies]
 rusty_engine = "5.2.1"
+rand = "0.8.5"
+channels = "0.8.0"
+log = "0.4"
+env_logger = "0.9"
+display = "0.1.2"
+crossbeam = "0.8"
