@@ -131,11 +131,28 @@ fn game_logic(engine: &mut Engine, game_state: &mut GameState) {
     //Handling health and health events
     let health_message = engine.texts.get_mut("health_message").unwrap();
     for event in engine.collision_events.drain(..) {
-        if !event.pair.either_contains("Player_1") || event.state.is_end() { continue; }
+        //Skipping over events that does not include the player
+        if !event.pair.either_contains("Player_1") || event.state.is_end() {
+            continue;
+        }
         if game_state.health > 0 {
-            println!("collision happened");
+            //Subtracting one health if a collision has happened
             game_state.health -= 1;
             health_message.value = format!("Health {}", game_state.health);
+
+            //Setting the game_state to be lost if the player has lost all health
+            if game_state.health == 0 {
+                game_state.lost = true;
+            }
         }
+    }
+
+    //Handling Game over event
+    if game_state.lost {
+        // Creating Game over text
+        let mut game_over_message = engine.add_text("game_over", "Game Over");
+        game_over_message.translation = Vec2::new(0.0, 0.0);
+        // Adding Game over text to the center of the screen
+        game_over_message.font_size = 128.0;
     }
 }
