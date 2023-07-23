@@ -1,3 +1,5 @@
+use std::time;
+use std::thread;
 //Libraries
 use rand::prelude::*;
 use rusty_engine::prelude::*;
@@ -11,6 +13,7 @@ struct GameState {
     high_score: i32,
     health: i32,
     lost: bool,
+    score: i32,
 }
 
 impl Default for GameState {
@@ -19,6 +22,7 @@ impl Default for GameState {
             high_score: 0,
             health: 5,
             lost: false,
+            score: 0,
         }
     }
 }
@@ -53,14 +57,21 @@ fn main() {
     //Adding obstacles to the game
     let obstacle_presets: Vec<SpritePreset> = vec![
         SpritePreset::RacingBarrelBlue,
+        SpritePreset::RacingBarrelBlue,
+        SpritePreset::RacingBarrelBlue,
+        SpritePreset::RacingBarrelBlue,
         SpritePreset::RacingBarrelRed,
+        SpritePreset::RacingBarrelRed,
+        SpritePreset::RacingBarrelRed,
+        SpritePreset::RacingBarrelRed,
+        SpritePreset::RacingConeStraight,
         SpritePreset::RacingConeStraight,
     ];
     for (i, preset) in obstacle_presets.into_iter().enumerate() {
         let mut obstacle = game.add_sprite(format!("obstacle{}", i), preset);
         obstacle.layer = 5.0;
         obstacle.collision = true;
-        obstacle.translation.x = thread_rng().gen_range(800.0..1600.0);
+        obstacle.translation.x = thread_rng().gen_range(3800.0..5400.0);
         obstacle.translation.y = thread_rng().gen_range(-ROAD_WIDTH..ROAD_WIDTH)
     }
 
@@ -95,17 +106,26 @@ fn game_logic(engine: &mut Engine, game_state: &mut GameState) {
     //Getting mutable reference to the player
     let player1 = engine.sprites.get_mut("Player_1").unwrap();
 
-    //Moving the player with input
-    player1.translation.y += direction * PLAYER_SPEED * engine.delta_f32;
-    player1.rotation = 0.15 * direction;
+
+    if !game_state.lost {
+        //Moving the player with input from arrow keys
+        player1.translation.y += direction * PLAYER_SPEED * engine.delta_f32;
+        player1.rotation = 0.15 * direction;
+    } else {
+        //Spinning the player out of the frame if the game is lost
+        player1.translation.y += 5.0;
+        player1.translation.x += 5.0;
+        player1.rotation += 0.15;
+    }
 
     //Killing the player if it goes out of bounds
     if player1.translation.y > ROAD_WIDTH || player1.translation.y < -ROAD_WIDTH {
         game_state.health = 0;
+        game_state.lost = true;
     }
 
     //Moving roadlines and obstacles if right arrow is pressed to create illusion of movement to the right
-    if engine.keyboard_state.pressed(KeyCode::Right) {
+    if !game_state.lost {
         //Iterating through all sprites
         for sprite in engine.sprites.values_mut() {
             if sprite.label.starts_with("Roadline") {
@@ -150,9 +170,11 @@ fn game_logic(engine: &mut Engine, game_state: &mut GameState) {
     //Handling Game over event
     if game_state.lost {
         // Creating Game over text
-        let mut game_over_message = engine.add_text("game_over", "Game Over");
+        let mut game_over_message = engine.add_text("game_over", format!("Game Over {}", game_state.score));
         game_over_message.translation = Vec2::new(0.0, 0.0);
         // Adding Game over text to the center of the screen
         game_over_message.font_size = 128.0;
     }
+
+    if !game_state.lost {game_state.score += 1;}
 }
