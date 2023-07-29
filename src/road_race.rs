@@ -1,8 +1,9 @@
 //Libraries
-use std::time;
+#[allow(unused_imports)]
 use std::thread;
 use rand::prelude::*;
 use rusty_engine::prelude::*;
+
 
 //Constants
 const PLAYER_SPEED: f32 = 250.0;
