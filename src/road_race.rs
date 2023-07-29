@@ -9,16 +9,16 @@ const PLAYER_SPEED: f32 = 250.0;
 const ROAD_SPEED: f32 = 900.0;
 const ROAD_WIDTH: f32 = 300.0;
 
-struct RoadRaceGameState {
+struct GameState {
     high_score: i32,
     health: i32,
     lost: bool,
     score: i32,
 }
 
-impl Default for RoadRaceGameState {
+impl Default for GameState {
     fn default() -> Self {
-        RoadRaceGameState {
+        GameState {
             high_score: 0,
             health: 5,
             lost: false,
@@ -30,7 +30,7 @@ impl Default for RoadRaceGameState {
 
 pub fn run_roadrace(){
     let mut game = Game::new();
-    let mut game_state = RoadRaceGameState::default();
+    let mut game_state = GameState::default();
 
     //Creating player and adjusting player attributes
     let mut player = game.add_sprite("Player_1", SpritePreset::RacingCarBlue);
@@ -94,7 +94,7 @@ pub fn run_roadrace(){
 }
 
 
-fn game_logic(engine: &mut Engine, game_state: &mut RoadRaceGameState) {
+fn game_logic(engine: &mut Engine, game_state: &mut GameState) {
     let mut direction: f32 = 0.0;
 
     //Fetching Keyboard inputs
