@@ -1,9 +1,8 @@
 //Libraries
-#[allow(unused_imports)]
-use std::thread;
 use rand::prelude::*;
 use rusty_engine::prelude::*;
-
+#[allow(unused_imports)]
+use std::thread;
 
 //Constants
 const PLAYER_SPEED: f32 = 250.0;
@@ -28,8 +27,7 @@ impl Default for GameState {
     }
 }
 
-
-pub fn run_roadrace(){
+pub fn run_roadrace() {
     let mut game = Game::new();
     let mut game_state = GameState::default();
 
@@ -94,7 +92,6 @@ pub fn run_roadrace(){
     game.run(game_state);
 }
 
-
 fn game_logic(engine: &mut Engine, game_state: &mut GameState) {
     let mut direction: f32 = 0.0;
 
@@ -108,7 +105,6 @@ fn game_logic(engine: &mut Engine, game_state: &mut GameState) {
 
     //Getting mutable reference to the player
     let player1 = engine.sprites.get_mut("Player_1").unwrap();
-
 
     if !game_state.lost {
         //Moving the player with input from arrow keys
@@ -173,11 +169,14 @@ fn game_logic(engine: &mut Engine, game_state: &mut GameState) {
     //Handling Game over event
     if game_state.lost {
         // Creating Game over text
-        let mut game_over_message = engine.add_text("game_over", format!("Game Over {}", game_state.score));
+        let mut game_over_message =
+            engine.add_text("game_over", format!("Game Over {}", game_state.score));
         game_over_message.translation = Vec2::new(0.0, 0.0);
         // Adding Game over text to the center of the screen
         game_over_message.font_size = 128.0;
     }
 
-    if !game_state.lost {game_state.score += 1;}
+    if !game_state.lost {
+        game_state.score += 1;
+    }
 }
