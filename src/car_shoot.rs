@@ -2,6 +2,7 @@
 use rusty_engine::prelude::*;
 #[allow(dead_code)]
 #[allow(unused_imports)]
+const MARBLE_SPEED: f32 = 10.0;
 
 
 pub fn run_car_shoot(){
@@ -22,7 +23,7 @@ pub fn run_car_shoot(){
     game.audio_manager.play_music(MusicPreset::Classy8Bit, 0.5);
 
     //Adding sprites
-    let mut barrel = game.add_sprite("red_car",SpritePreset::RacingBarrierRed);
+    let mut barrel = game.add_sprite("barrel",SpritePreset::RacingBarrierRed);
     barrel.translation.y = -325.0;
     barrel.layer = 10.0;
     barrel.rotation = UP;
@@ -54,6 +55,48 @@ impl Default for GameState{
 }
 
 fn game_logic(engine: &mut Engine, game_state: &mut GameState){
+    //Moving barrel
+    let barrel = engine.sprites.get_mut("barrel").unwrap();
+    // Getting mouse cordinates and setting the barrels y coordinate to match the mouse y coordinate
+    if let Some(location) = engine.mouse_state.location(){
+        barrel.translation.x = location[0];
+    }
+    let barrel_x = barrel.translation.x;
+
+    //Eject ball sprite if mouse is clicked
+    if engine.mouse_state.just_pressed(MouseButton::Left){
+        //Shoots ball if the marble vector is not empty.
+        if  let Some(label) = game_state.marble_labels.pop(){
+            let marble = engine.add_sprite(label, SpritePreset::RollingBallBlue);
+            marble.translation.x = barrel_x;
+            marble.translation.y = -275.0;
+            println!("Shots fired")
+        }
+
+    }
+
+    //Create vector to store deletable sprites labels
+    let mut labels_to_delete: Vec<String> = Vec::new();
+
+    //Move sprites that are on screen upwards
+    for sprite in engine.sprites.values_mut(){
+        if sprite.label.starts_with("marble"){
+            //Moving ball upwards
+            sprite.translation.y += MARBLE_SPEED * engine.delta_f32;
+            //Add label of sprite to delete labels if the ball is offscreen
+            if sprite.translation.y >= 500.0 {
+                labels_to_delete.push(sprite.label.clone());
+            }
+        }
+
+    }
+    //Deleting the balls from the sprite hash-map
+    for sprite_label in labels_to_delete{
+        engine.sprites.remove(&sprite_label);
+        game_state.marble_labels.push(sprite_label);
+    }
+
+
 
 }
 
