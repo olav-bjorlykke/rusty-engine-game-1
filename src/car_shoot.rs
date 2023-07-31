@@ -133,6 +133,7 @@ fn game_logic(engine: &mut Engine, game_state: &mut GameState) {
     }
 
     //Handling collision events
+    let cars_left_message = engine.texts.get_mut("cars_left_message").unwrap();
     for event in engine.collision_events.drain(..) {
         match event.state {
             CollisionState::Begin => {
@@ -140,6 +141,8 @@ fn game_logic(engine: &mut Engine, game_state: &mut GameState) {
                 if event.pair.either_contains("marble") {
                     engine.sprites.remove(&event.pair.0);
                     engine.sprites.remove(&event.pair.1);
+                    game_state.cars_left -= 1;
+                    cars_left_message.value = format!("Cars left: {}", game_state.cars_left);
                 }
                 //Pushing labels back to the game_state struct.
                 if event.pair.0.contains("marble") {
